@@ -2,6 +2,7 @@
 wtMidi script AUXMIDI/arg [1to4] command in Win-test Thanks to Laurent Haas F6FVY
 SO1R Version
 This script allows the DJ Compact console to control the FTDX101
+see under for the mapping and the file DJ Control Compact-Yaesu-v1.9.pdf
 
 -Version 1.9 P. Nouchi - F6IFY le  30 Décembre 2023
 	Pot. VolumeB is now to change the CW BREAK-IN DELAY TIME
