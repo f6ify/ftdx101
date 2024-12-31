@@ -1,0 +1,220 @@
+--	version v1.9
+--	Only for the Yaesu FTDX101 
+	
+local arg = {};
+
+for i, j, k, l in string.gmatch(wtArg, "(%d+)/(-?%d+)/(%d+)/(%d+)") do
+	arg[0] = i + 0;	-- The "+ 0" ensures numbers in arg
+	arg[1] = j + 0;
+	arg[2] = k + 0;
+	arg[3] = l + 0;
+end
+if (WT_DJ_JOGORPOT == nil) then  wtScript:Call("DJConstants") end
+-- arg[0] = Device
+-- arg[1]  = Status
+-- arg[2] = Control
+-- arg[3] = Value
+
+--if not((arg[0] == 0) or (arg[0] == 10)) then return end -- Assume the DJ console is device 0 or 10
+
+--*** Deal with Foot Switch if any ***
+if (arg[0] == FOOTSWITCH) then
+	if (arg[3] == 127) then -- FootSwitch down
+		wtMicroham:Send("PS1") -- softPTT microham ON
+		wtApp:Sleep(10)
+		wtRadio:Send("TX1;") -- PTT ON 
+	elseif (arg[3] == 0) then -- FootSwitch Up
+		wtApp:Sleep(90)
+		wtRadio:Send("TX0;") -- PTT OFF
+		wtApp:Sleep(10)
+		wtMicroham:Send("PS0") -- softPTT microham OFF
+	end
+	return
+--*** Now DJControl ***
+elseif arg[0] == 0 then
+	if (arg[1] == WT_DJ_JOGORPOT) then	-- Rotate Jog Wheel or Pot
+
+	--**************Jog B is RIT************
+		if (arg[2] == WT_DJ_JOGB)  then -- Jog Wheel B
+			if (arg[3] == 127) then -- RIT down
+				wtRadio:Send("RD0005;")            -- RIT down 5 Hz command
+			elseif (arg[3] == 1) then -- RIT Up
+				wtRadio:Send("RU0005;")            -- RIT up 5 Hz command
+			end
+	--*** Now Jog A for vfo ***
+		elseif (arg[2] == WT_DJ_JOGA) then -- Jog A step is 10Hz or 100Hz depend the REC button
+			if (arg[3] == 127) then -- vfo down
+				wtRadio:Send("DN;")                -- VFO A down
+			elseif (arg[3] == 1) then -- vfo Up
+				wtRadio:Send("UP;")                -- VFO A up
+			end
+	-- *** Potentiomètres ***
+		elseif (arg[2] == WT_DJ_POTMEDIUMA) then -- Rotate Medium (A) pot. change the filter width for Main vfo
+			FilterWidthMain = ("SH00" .. string.format( "%02d", (arg[3] + 9)  / 9) .. ";")
+			wtRadio:Send(FilterWidthMain) -- Filter Width for Main vfo
+		elseif (arg[2] == WT_DJ_POTMEDIUMB) then -- Rotate Medium (B) pot. change the IF Shift
+			if arg[3] > 64 then
+				IFShiftDirection = "+"
+				IFValue = string.format( "%04d", ((arg[3] - 64) * 60) /2)    
+			else 
+				IFShiftDirection = "-"
+				IFValue = string.format( "%04d", ((arg[3] - 63)  * -60) / 2)
+			end
+			IFShiftMain = ("IS00" .. IFShiftDirection .. IFValue .. ";")
+			wtRadio:Send(IFShiftMain) -- IF Shift
+		elseif (arg[2] == WT_DJ_POTVOLUMEA) then -- Rotate Volume A AF Gain Main RX
+			AFGainMain = ("AG0" .. string.format( "%03d", (arg[3] + 0)  * 2) .. ";")
+			wtRadio:Send(AFGainMain) -- Main RX RF Gain
+		elseif (arg[2] == WT_DJ_POTVOLUMEB) then -- Rotate Volume B CW BREAK-IN DELAY TIME
+			RFGainMain = ("SD" .. string.format( "%04d", (arg[3]  + 3)  * 20) .. ";")
+			wtRadio:Send(RFGainMain) -- CW BREAK-IN DELAY TIME
+		elseif (arg[2] == WT_DJ_POTBASSB) then -- Bass B for Power level
+			PWRLevel = string.format( "%03d", arg[3] * 60/127 + 0) -- 0 to 60 Watts
+			wtRadio:Send("PC" .. PWRLevel .. ";") -- Power level
+		elseif (arg[2] == WT_DJ_POTBASSA) then -- Bass A forMicro Gain if SSB or Sidetone CW Level or monitor level		
+			if (wtQso:GetModeId() ==  WT_MODE_SSB) then
+				MicGain = string.format( "%03d", (arg[3] * 100) / 127 + 0)
+				wtRadio:Send("MG" .. MicGain .. ";") --Micro Gain
+			else -- wtRadio:Send("EX020109" .. MicGain .. ";")
+				MonLevel = ("ML1" .. string.format( "%03d", (arg[3] * 100) / 127 + 0) .. ";") -- 0 to 100
+				wtRadio:Send(MonLevel)
+			end
+-- *** Crossfader for CW Speed ****
+		elseif (arg[2] == WT_DJ_CROSSFADER) then -- Move Slider
+			cwSpeed = string.format( "%03d", (arg[3] * 20) /127 + 22)
+			if (cwSpeed ~= nil) then
+				wtKeyer:SetCwSpeed(cwSpeed) -- CW Speed
+			end
+		end 
+	-- *** Push buttons Radio1 ***
+	elseif (arg[1] == WT_DJ_PUSH_BUTTON) then -- Push buttons
+		if ((arg[2] == WT_DJ_BTN_CUE_B) and (arg[3] == 127)) then 
+			wtRadio:Send("RC;")        -- Clear Clarifier
+		elseif ((arg[2] == WT_DJ_BTN_PLAY_B) and (arg[3] == 127)) then 
+			wtRadio:Send("RT1;")      -- Clarifier ON
+		elseif ((arg[2] == WT_DJ_BTN_SYNC_B) and (arg[3] == 127)) then 
+			wtRadio:Send("RT0;")      -- Clarifier Off
+		elseif ((arg[2] == WT_DJ_BTN_CUE_A) and (arg[3] == 127)) then 
+			wtRadio:Send("AB;")        -- Main = Sub
+		elseif ((arg[2] == WT_DJ_BTN_SYNC_A) and (arg[3] == 127)) then 
+			wtRadio:Send("VS0;")      -- Main vfo
+		elseif ((arg[2] == WT_DJ_BTN_PLAY_A) and (arg[3] == 127)) then 
+			wtRadio:Send("VS1;")      -- Sub vfo
+		elseif ((arg[2] == WT_DJ_BTN_1A) and (arg[3] == 127)) then -- Bouton 1A --> Split ON/Off (toggle on same button)
+			if (wtRadio:IsSplit()  == false) then
+				wtRadio:Send("ST1;")      -- Split On
+			else 
+				wtRadio:Send("ST0;")      -- Split Off
+			end
+		elseif ((arg[2] == WT_DJ_BTN_2A ) and (arg[3] == 127)) then -- Bouton 2A --> Swap vfo (toggle on same button)
+			wtRadio:Send("SV;")      -- Swap vfo
+		elseif ((arg[2] == WT_DJ_BTN_REC) and (arg[3] == 127)) then -- Bouton REC --> Fast Step for vfo A and B
+			if (Step == nil) then
+				Step = 1
+			else
+				Step = Step + 1
+			end
+			if (Step == 1) then StepNumber = "FS4;" -- Fast Step Off
+			elseif (Step == 2) then StepNumber = "FS7;" -- Fast Step On
+				Step = 0
+			end
+			wtRadio:Send(StepNumber)
+		elseif ((arg[2] == WT_DJ_BTN_3B) and (arg[3] == 127)) then -- Bouton 3B --> Antenna switch for Main RX
+			if (Antenna == nil) then
+				Antenna = 1
+			else
+				Antenna = Antenna + 1
+			end
+			if (Antenna == 1) then AntennaNumber = "AN01;"
+			elseif (Antenna == 2) then AntennaNumber = "AN03;"
+				Antenna = 0
+			end
+			wtRadio:Send(AntennaNumber)
+		elseif ((arg[2] == WT_DJ_BTN_4B) and (arg[3] == 127)) then -- Bouton 4B --> Antenna switch for Sub RX
+			if (AntennaS == nil) then
+				AntennaS = 1
+			else
+				AntennaS = AntennaS + 1
+			end
+			if (AntennaS == 1) then AntennaNumberS = "AN11;"
+			elseif (AntennaS == 2) then AntennaNumberS = "AN13;"
+				AntennaS = 0
+			end
+			wtRadio:Send(AntennaNumberS)
+		elseif ((arg[2] == WT_DJ_BTN_1B) and (arg[3] == 127)) then -- Bouton 1B --> RF Attenuator for Main RX
+			if (Att == nil) then
+				Att = 1
+			else
+				Att = Att + 1
+			end
+			if (Att == 1) then AttNumber = "RA00;"
+			elseif (Att == 2) then AttNumber = "RA01;"
+			elseif (Att == 3) then AttNumber = "RA02;"
+			elseif (Att == 4) then AttNumber = "RA03;"
+				Att = 0
+			end
+			wtRadio:Send(AttNumber)
+		elseif ((arg[2] == WT_DJ_BTN_2B) and (arg[3] == 127)) then -- Bouton 2B --> RF Attenuator for Sub RX
+			if (AttS == nil) then
+				AttS = 1
+			else
+				AttS = AttS + 1
+			end
+			if (AttS == 1) then AttNumberS = "RA10;"
+			elseif (AttS == 2) then AttNumberS = "RA11;"
+			elseif (AttS == 3) then AttNumberS = "RA12;"
+			elseif (AttS == 4) then AttNumberS = "RA13;"
+				AttS = 0
+			end
+			wtRadio:Send(AttNumberS)
+		elseif ((arg[2] == WT_DJ_BTN_3A)  and (arg[3] == 127))then -- Bouton 3A --> Preamplifiers for Main and Sub RX
+			if (Preamp == nil) then
+				Preamp = 1
+			else
+				Preamp = Preamp + 1
+			end
+			if (Preamp == 1) then PreampNumber = "PA00;"
+				PreampSub = "PA10;"
+			elseif (Preamp == 2) then PreampNumber = "PA01;"
+				PreampSub = "PA11;"
+			elseif (Preamp == 3) then PreampNumber = "PA02;"
+				PreampSub = "PA12;"
+				Preamp = 0
+			end
+			wtRadio:Send(PreampNumber)
+			wtRadio:Send(PreampSub)
+		elseif ((arg[2] == WT_DJ_BTN_4A) and (arg[3] == 127)) then -- Bouton 4A --> Roofing filters
+			if (PreampS == nil) then
+				PreampS = 1
+			else
+				PreampS = PreampS + 1
+			end
+			if (PreampS == 1) then 
+				PreampNumberS = "RF05;"
+				RFilter ="RF15;"
+			elseif (PreampS == 2) then PreampNumberS = "RF04;"
+				RFilter ="RF14;"
+			elseif (PreampS == 3) then PreampNumberS = "RF03;"
+				RFilter ="RF13;"
+			elseif (PreampS == 4) then PreampNumberS = "RF02;"
+				RFilter ="RF12;"
+			elseif (PreampS == 5) then PreampNumberS = "RF01;"
+				RFilter ="RF11;"
+				PreampS = 0
+			end
+			wtRadio:Send(PreampNumberS)
+			wtRadio:Send(RFilter)
+		elseif ((arg[2] == WT_DJ_BTN_AUTOMIX) and (arg[3] == 127)) then -- Automix button down
+			if wtQso:IsModePhone() then
+				wtMicroham:Send("PS1") -- softPTT microham ON
+				wtApp:Sleep(10)
+				wtRadio:Send("TX1;") -- PTT ON 
+			end
+		elseif ((arg[2] == WT_DJ_BTN_AUTOMIX) and (arg[3] == 0)) then -- Automix button Up
+			wtRadio:Send("TX0;") -- PTT OFF
+			wtApp:Sleep(10)
+			wtMicroham:Send("PS0") -- softPTT microham OFF
+		end
+	end	
+end
+return

@@ -1,0 +1,68 @@
+--
+wtMidi script AUXMIDI/arg [1to4] command in Win-test Thanks to Laurent Haas F6FVY
+SO1R Version
+This script allows the DJ Compact console to control the FTDX101
+
+-Version 1.9 P. Nouchi - F6IFY le  30 Décembre 2023
+	Pot. VolumeB is now to change the CW BREAK-IN DELAY TIME
+-Version 1.8 P. Nouchi - F6IFY le  15 Décembre 2022
+	use constants from DJConstant.wts file
+	Changeg Roofing filter on button 4A
+	Preamplifiers are changed on both Main and Sub RX with the 3A button
+-Version 1.7 P. Nouchi - F6IFY le  16 Février 2022
+	Add sleep for the PTT (Automix button)
+-Version 1.6 P. Nouchi - F6IFY le  2 Decembre 2021
+	pot VolumeA is AF Gain of VFO-A  
+	pot VolumeB is RF Gain of VFO-A
+	pot MediumB is now IF shift
+	Send PTT to amplifier and TRX for automix button and footswitch
+-Version 1.5 P. Nouchi - F6IFY le  1 Decembre 2021
+	add CW sidetone level on BassA Potentiometer  
+-Version 1.4 P. Nouchi - F6IFY le  16 Janvier 2021
+	bug correction
+	power on bass pot. from 0 to 20 Watts
+-Version 1.3 P. Nouchi - F6IFY le  7 Janvier 2021 Need 4.34.0-dev rev 790 et + 
+	Footswitch added (dev10) need wtMidi_1_2_dev_serial
+-Version 1.2 P. Nouchi - F6IFY le  5 Janvier 2021
+	Volume B is now Monitor level in SSB or RTTY and Sub VFO RX gain in CW
+-Version 1.1 P. Nouchi - F6IFY le  21 Decembre 2020
+	Add PTT on automix button
+-Version 1.0 P. Nouchi - F6IFY le  5 Decembre 2020
+	Suppress antenna 2 on Sub RX
+	Crossfader is now CW Speed
+	Power Level is moved to Bass B pot.
+	
+-Version 0.4 P. Nouchi - F6IFY le  4 Decembre 2020
+	Suppress antenna 2
+-Version 0.3 P. Nouchi - F6IFY le  4 Decembre 2020
+	Add swap vfo
+-Version 0.2 P. Nouchi - F6IFY le  3 Decembre 2020
+	Add buttons and potentiometers
+-Version 0.1 P. Nouchi - F6IFY le  2 Decembre 2020
+	Just a start with Jog A roll vfo and Jog B roll RIT
+	
+		- Jog Au pas de 10 Hz roll the vfo or 100Hz with REC button (toggle)
+		- jog B RIT au pas de 10 Hz 
+		- Bouton SYNC (A) --> select VFO A (Main)
+		- Bouton :> (A) --> Select VFO B (Sub)
+		- Bouton CUE (A) --> A=B (Main=Sub)
+		- Bouton 1A --> Split ON/Off with Shift
+		- Bouton 2A -->  Exchange the main and sub frequency data (Swap vfo)
+		- Bouton 3A --> Preamp 0/1/2 for Main and sub RX
+		- Bouton 4A --> Roofing Filters
+		- Bouton 1B --> RF Attenuator for Main RX
+		- Bouton 2B --> RF Attenuator for Sub RX
+		- Bouton 3B --> Antenna switch for Main RX
+		- Bouton 4B --> Antenna switch for Sub RX
+		- Bouton AUTOMIX -->  PTT On/Off (SSB Only)
+		- Bouton :> B --> RIT On
+		- Bouton CUE (B) --> RIT Clear
+		- Bouton SYNC (B) --> RIT Off
+		- Rotate Volume (A) pot. change the AF Gain Main RX
+		- Rotate Volume (B) Rotate Volume B for CW BREAK-IN DELAY TIME
+		- Rotate Bass (A) --> Micro Gain in SSB or sidetone level in CW
+		- Rotate Medium (A) pot. change the filter width for Main vfo
+		- Rotate Medium (B) pot. change the IF Shift
+		- Rotate Bass (B) Power 0 (Full Left) to 60 W (full right to preserve amplifier) 
+		- Cross fader is for CW speed
+	
